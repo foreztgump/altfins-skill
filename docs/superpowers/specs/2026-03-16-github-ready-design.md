@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-16
 **Approach:** Minimal (Approach A) — ship what's needed for a credible GitHub public repo
-**Status:** Draft
+**Status:** Reviewed (rev 2)
 
 ## Goal
 
@@ -31,7 +31,7 @@ Bring altfins-skill from scaffolding to a clean, testable, documented GitHub-rea
 Sections:
 - **Title + one-line description**
 - **Features** — bullet list of what the skill covers (150+ indicators, 130+ signals, etc.)
-- **Prerequisites** — curl, jq, ALTFINS_API_KEY
+- **Prerequisites** — curl, jq, ALTFINS_API_KEY, Linux (macOS note: `stat -c` not portable)
 - **Installation** — clone + run install.sh or manual symlink
 - **Quick Start** — 5-6 common usage examples (one per script category)
 - **Scripts Reference** — table of all scripts with purpose and mode
@@ -58,6 +58,10 @@ tests/
 │   ├── news_response.json
 │   ├── enums_symbols_response.json
 │   ├── enums_intervals_response.json
+│   ├── enums_permits_response.json
+│   ├── analytics_types_response.json
+│   ├── signal_keys_response.json
+│   ├── screener_types_response.json
 │   └── error_response.json
 ├── helpers/
 │   └── mock_curl.bash
@@ -78,19 +82,39 @@ tests/
 
 ```bash
 # Pattern: mock curl returns fixture based on URL match
+# IMPORTANT: URL extraction uses http* match (not last-arg) for robustness.
+# IMPORTANT: Output must match curl's -w "\n%{http_code}" format — the library
+# expects the HTTP code as the very last line after a newline.
+MOCK_HTTP_CODE="${MOCK_HTTP_CODE:-200}"
+
 curl() {
   local url=""
-  for arg in "$@"; do url="$arg"; done
+  for arg in "$@"; do
+    [[ "$arg" == http* ]] && url="$arg"
+  done
   case "$url" in
-    *screener-data/search*) cat "$FIXTURES_DIR/screener_response.json" ;;
-    *ohlc/snapshot*)        cat "$FIXTURES_DIR/ohlc_snapshot_response.json" ;;
-    # ... etc
+    *screener-data/search-requests*) cat "$FIXTURES_DIR/screener_response.json" ;;
+    *screener-data/value-types*)     cat "$FIXTURES_DIR/screener_types_response.json" ;;
+    *ohlcv/snapshot*)                cat "$FIXTURES_DIR/ohlc_snapshot_response.json" ;;
+    *ohlcv/history*)                 cat "$FIXTURES_DIR/ohlc_history_response.json" ;;
+    *analytics/search*)              cat "$FIXTURES_DIR/analytics_response.json" ;;
+    *analytics/types*)               cat "$FIXTURES_DIR/analytics_types_response.json" ;;
+    *signals-feed/search*)           cat "$FIXTURES_DIR/signals_response.json" ;;
+    *signals-feed/signal-keys*)      cat "$FIXTURES_DIR/signal_keys_response.json" ;;
+    *news-summary/search*)           cat "$FIXTURES_DIR/news_response.json" ;;
+    *news-summary/find*)             cat "$FIXTURES_DIR/news_response.json" ;;
+    *technical-analysis/data*)       cat "$FIXTURES_DIR/technical_analysis_response.json" ;;
+    *symbols*)                       cat "$FIXTURES_DIR/enums_symbols_response.json" ;;
+    *intervals*)                     cat "$FIXTURES_DIR/enums_intervals_response.json" ;;
+    *available-permits*)             cat "$FIXTURES_DIR/enums_permits_response.json" ;;
+    *)                               cat "$FIXTURES_DIR/error_response.json" ;;
   esac
-  echo ""  # HTTP status code line
-  echo "200"
+  printf "\n%s" "$MOCK_HTTP_CODE"
 }
 export -f curl
 ```
+
+**Note:** `altfins_format_results.sh` does not call curl — its tests use fixtures directly without the mock.
 
 **test_lib.bats:** Unit tests for _lib.sh functions:
 - `make_api_request` sets HTTP_CODE correctly
@@ -125,7 +149,7 @@ Minimal but realistic JSON. Each fixture is a valid paginated response matching 
 Example fixture structure (screener):
 ```json
 {
-  "size": 10,
+  "size": 100,
   "number": 0,
   "sort": [{"direction": "DESC", "property": "lastPrice", "ignoreCase": false, "nullHandling": "NATIVE"}],
   "content": [
@@ -145,6 +169,7 @@ Example fixture structure (screener):
 - Rename `.env` → `.env.example` (template, not real secrets)
 - Ensure `.gitignore` excludes `.env` but not `.env.example`
 - Verify all scripts have consistent header comments
+- Document Linux-only `stat -c %Y` in README prerequisites (macOS uses `stat -f %m`; caching won't work on macOS without a fix — acceptable for v1)
 
 ## Success Criteria
 
@@ -156,4 +181,5 @@ Example fixture structure (screener):
 ## Dependencies
 
 - bats-core installed (`sudo apt install bats` or from GitHub)
+- shellcheck installed (`sudo apt install shellcheck`) — required for `make check`
 - No API key needed for tests (all mocked)
