@@ -1,0 +1,1 @@
+{"size":100,"number":0,"sort":[{"direction":"DESC","property":"lastPrice","ignoreCase":false,"nullHandling":"NATIVE"}],"content":[{"symbol":"BTC","name":"Bitcoin","lastPrice":"67234.50","additionalData":{}},{"symbol":"ETH","name":"Ethereum","lastPrice":"3456.78","additionalData":{}}],"totalElements":2,"totalPages":1,"numberOfElements":2,"first":true,"last":true}

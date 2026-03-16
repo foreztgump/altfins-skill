@@ -1,0 +1,1 @@
+{"timestamp":"2026-03-16T00:00:00Z","status":400,"error":"Bad Request","message":"Validation failed","request":"/api/v2/public/test","exceptionUID":"test-uid-123","details":{},"validations":[]}

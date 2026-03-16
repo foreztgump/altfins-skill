@@ -1,0 +1,1 @@
+[{"nameBullish":"EMA 12/50 Bullish Crossover","nameBearish":"EMA 12/50 Bearish Crossover","trendSensitive":false,"signalType":"MA_CROSSOVER","signalKey":"EMA_12_50_CROSSOVERS"},{"nameBullish":"RSI(14) Oversold","nameBearish":"RSI(14) Overbought","trendSensitive":true,"signalType":"MOMENTUM","signalKey":"SIGNALS_SUMMARY_RSI_14"}]
