@@ -63,9 +63,9 @@ if ! echo "$input" | jq '.' > /dev/null 2>&1; then
   exit 1
 fi
 
-# Extract content array from paginated response
-content=$(echo "$input" | jq 'if .content then .content else . end')
-total=$(echo "$input" | jq '.totalElements // (if type == "array" then length else 1 end)')
+# Extract content array from paginated response or use raw array
+content=$(echo "$input" | jq 'if type == "object" and has("content") then .content else . end')
+total=$(echo "$input" | jq 'if type == "object" and has("totalElements") then .totalElements elif type == "array" then length else 1 end')
 
 # Apply top limit
 if [[ "$top" -gt 0 ]]; then
