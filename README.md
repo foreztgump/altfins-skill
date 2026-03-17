@@ -39,6 +39,9 @@ Claude will automatically detect the skill and use it when you ask about crypto 
 ```bash
 # Clone into your project's .claude/skills/ directory
 git clone https://github.com/foreztgump/altfins-skill.git .claude/skills/altfins-skill
+
+# Set your API key (if not already in your shell profile)
+export ALTFINS_API_KEY='your_key_here'
 ```
 
 ### Standalone (without Claude Code)
