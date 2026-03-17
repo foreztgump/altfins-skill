@@ -1,0 +1,26 @@
+# Environment
+.env
+*.env.local
+
+# Cache
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Claude
+.claude/
+
+# Build artifacts
+*.zip
+dist/
+
+# Test coverage
+coverage/
