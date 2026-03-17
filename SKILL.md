@@ -7,15 +7,12 @@ description: >
   trading signals, indicator data (RSI, MACD, SMA, EMA), OHLC candles, crypto news,
   or wants to screen/filter cryptocurrencies by technical criteria. Covers 2200+ assets,
   150+ indicators, 130+ signals. Requires ALTFINS_API_KEY env var.
-version: 1.0.0
-license: MIT
-allowed-tools: Bash
-metadata: {"openclaw":{"requires":{"env":["ALTFINS_API_KEY"],"bins":["curl","jq"]},"primaryEnv":"ALTFINS_API_KEY","configPaths":["~/.config/altfins-skill/"]}}
+allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/*)
 ---
 
 # altFINS Crypto Analytics Skill
 
-Query crypto market data, technical indicators, trading signals, and news from the altFINS API. Designed for AI agents that need crypto market intelligence.
+Query crypto market data, technical indicators, trading signals, and news from the altFINS API.
 
 ## Prerequisites
 
@@ -50,69 +47,71 @@ User wants crypto data?
 
 ## Scripts Reference
 
-| Script | Purpose | Method |
-|--------|---------|--------|
-| `altfins_screener.sh` | Screen/filter 2200+ cryptos by indicators, price, volume, trends | POST |
-| `altfins_ohlc.sh` | OHLCV price data — snapshot (multi-coin) or historical (single coin) | POST |
-| `altfins_analytics.sh` | Historical data for any of 150+ indicators (SMA, RSI, MACD, etc.) | POST |
-| `altfins_signals.sh` | Trading signals feed — 130+ signal types, bullish/bearish | POST |
-| `altfins_technical_analysis.sh` | Expert trade setups with entry/exit/stop-loss for top 50+ coins | GET |
-| `altfins_news.sh` | AI-generated crypto news summaries | POST |
-| `altfins_enums.sh` | Reference data: symbols, intervals, API usage permits | GET |
-| `altfins_format_results.sh` | Format JSON results into summary, full detail, or CSV | Local |
+All scripts are in `${CLAUDE_SKILL_DIR}/scripts/`. Run them with full path:
+
+| Script | Purpose |
+|--------|---------|
+| `altfins_screener.sh` | Screen/filter 2200+ cryptos by indicators, price, volume, trends |
+| `altfins_ohlc.sh` | OHLCV price data — `snapshot` (multi-coin) or `history` (single coin) |
+| `altfins_analytics.sh` | Historical data for 150+ indicators (SMA, RSI, MACD, etc.) |
+| `altfins_signals.sh` | Trading signals feed — 130+ signal types, bullish/bearish |
+| `altfins_technical_analysis.sh` | Expert trade setups for top 50+ coins |
+| `altfins_news.sh` | AI-generated crypto news summaries |
+| `altfins_enums.sh` | Reference data: symbols, intervals, API usage permits |
+| `altfins_format_results.sh` | Format JSON results into summary, full detail, or CSV |
 
 ## Quick Examples
 
 ### Screen for oversold large caps
 ```bash
-scripts/altfins_screener.sh --min-mcap 1000000000 --max-rsi14 30 --coin-type REGULAR \
-  | scripts/altfins_format_results.sh --type screener --top 10
+${CLAUDE_SKILL_DIR}/scripts/altfins_screener.sh --min-mcap 1000000000 --max-rsi14 30 --coin-type REGULAR \
+  | ${CLAUDE_SKILL_DIR}/scripts/altfins_format_results.sh --type screener --top 10
 ```
 
 ### Get BTC price history (last 90 days)
 ```bash
-scripts/altfins_ohlc.sh history --symbol BTC --days 90 \
-  | scripts/altfins_format_results.sh --type ohlc --format csv
+${CLAUDE_SKILL_DIR}/scripts/altfins_ohlc.sh history --symbol BTC --days 90 \
+  | ${CLAUDE_SKILL_DIR}/scripts/altfins_format_results.sh --type ohlc --format csv
 ```
 
 ### Check RSI(14) for ETH over last 30 days
 ```bash
-scripts/altfins_analytics.sh --symbol ETH --type RSI14 --days 30 \
-  | scripts/altfins_format_results.sh --type analytics
+${CLAUDE_SKILL_DIR}/scripts/altfins_analytics.sh --symbol ETH --type RSI14 --days 30 \
+  | ${CLAUDE_SKILL_DIR}/scripts/altfins_format_results.sh --type analytics
 ```
 
 ### Get today's bullish signals
 ```bash
-scripts/altfins_signals.sh --direction BULLISH --days 1 \
-  | scripts/altfins_format_results.sh --type signals --top 20
+${CLAUDE_SKILL_DIR}/scripts/altfins_signals.sh --direction BULLISH --days 1 \
+  | ${CLAUDE_SKILL_DIR}/scripts/altfins_format_results.sh --type signals --top 20
 ```
 
 ### Get technical analysis for BTC
 ```bash
-scripts/altfins_technical_analysis.sh --symbol BTC \
-  | scripts/altfins_format_results.sh --type ta --format full
+${CLAUDE_SKILL_DIR}/scripts/altfins_technical_analysis.sh --symbol BTC \
+  | ${CLAUDE_SKILL_DIR}/scripts/altfins_format_results.sh --type ta --format full
 ```
 
 ### Get recent crypto news
 ```bash
-scripts/altfins_news.sh search --days 3 \
-  | scripts/altfins_format_results.sh --type news --top 10
+${CLAUDE_SKILL_DIR}/scripts/altfins_news.sh search --days 3 \
+  | ${CLAUDE_SKILL_DIR}/scripts/altfins_format_results.sh --type news --top 10
 ```
 
 ## Behavior Rules (MANDATORY)
 
 1. **NEVER return raw JSON to the user.** Always pipe results through `altfins_format_results.sh`.
 2. **Always check API credits** before running large queries. Run `altfins_enums.sh permits` first if unsure.
-3. **Default time interval is DAILY** unless the user specifies otherwise. Valid intervals: MINUTES15, HOURLY, HOURS4, HOURS12, DAILY.
+3. **Default time interval is DAILY** unless the user specifies otherwise. Valid: MINUTES15, HOURLY, HOURS4, HOURS12, DAILY.
 4. **For screener queries**, start with reasonable defaults (REGULAR coin type, DAILY interval) and add filters based on what the user asks for.
 5. **Signal direction** must be BULLISH or BEARISH — do not pass other values.
-6. **When results are empty**, suggest broadening filters (longer date range, fewer constraints) before assuming the API is broken.
+6. **When results are empty**, suggest broadening filters (longer date range, fewer constraints).
 7. **For historical data**, default to 30 days unless the user specifies. Use `--days` shorthand.
-8. **Rate limits apply.** If you get HTTP 429, wait and retry. Tell the user about the rate limit.
+8. **Rate limits apply.** If you get HTTP 429, tell the user and wait before retrying.
 9. **One credit = 100 returned items.** Be mindful of page sizes on large queries.
 10. **Always show result count** and offer to show more or filter differently.
 
-## Available Analytics Types (Common)
+## Common Analytics Types
 
 | Category | Types |
 |----------|-------|
@@ -131,25 +130,13 @@ scripts/altfins_news.sh search --days 3 \
 
 Use `altfins_analytics.sh --list-types` for the complete list.
 
-## Exit Codes
+## Additional Resources
 
-| Code | Meaning | Agent should... |
-|------|---------|-----------------|
-| 0 | Success — results on stdout | Format and present results |
-| 1 | Error — something failed | Report the error to user |
-
-## Data Storage
-
-Cached data stored in `~/.config/altfins-skill/cache/`. Cache TTL: 5 minutes. Reference data (symbols, intervals) cached longer. No other files written.
+- For complete API endpoint documentation, response schemas, and all enum values, see [references/api-reference.md](references/api-reference.md)
 
 ## Security
 
-All scripts source `scripts/_lib.sh`. The library:
-- Makes requests to a **single base URL**: `https://altfins.com/api/v2/public`
-- Uses **one credential**: `ALTFINS_API_KEY` (sent via `X-API-KEY` header)
-- Writes **only** to `~/.config/altfins-skill/` (cache files)
-- Does not read other environment variables, contact other hosts, or modify files outside its config directory
-
-## For full API details
-
-See `references/api-reference.md` for complete endpoint documentation, response schemas, and all enum values.
+- Single endpoint: `https://altfins.com/api/v2/public`
+- Single credential: `ALTFINS_API_KEY` (via `X-API-KEY` header, never logged)
+- Writes only to `~/.config/altfins-skill/cache/` (5-minute TTL)
+- All JSON payloads built with `jq` — no string interpolation

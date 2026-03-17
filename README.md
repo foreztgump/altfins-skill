@@ -21,11 +21,31 @@ Bash scripts for querying the [altFINS Crypto Data & Analytics API](https://altf
 
 ## Installation
 
+### As a Claude Code skill (recommended)
+
+```bash
+# Clone into your Claude Code skills directory
+git clone https://github.com/foreztgump/altfins-skill.git ~/.claude/skills/altfins-skill
+
+# Set your API key in your shell profile
+echo 'export ALTFINS_API_KEY="your_key_here"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+Claude will automatically detect the skill and use it when you ask about crypto data. You can also invoke it directly with `/altfins-skill`.
+
+### As a project skill
+
+```bash
+# Clone into your project's .claude/skills/ directory
+git clone https://github.com/foreztgump/altfins-skill.git .claude/skills/altfins-skill
+```
+
+### Standalone (without Claude Code)
+
 ```bash
 git clone https://github.com/foreztgump/altfins-skill.git
 cd altfins-skill
-
-# Set your API key
 export ALTFINS_API_KEY='your_key_here'
 
 # Option A: install script (symlinks to ~/.local/bin)
