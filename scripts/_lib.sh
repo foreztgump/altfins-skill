@@ -8,6 +8,8 @@
 #   - Local writes: ~/.config/altfins-skill/ only (cache, history)
 #   - No other env vars read, no other network calls
 
+set -euo pipefail
+
 # shellcheck disable=SC2034
 readonly LIB_BASE_URL="https://altfins.com/api/v2/public"
 readonly LIB_CONFIG_DIR="${HOME}/.config/altfins-skill"
@@ -145,11 +147,8 @@ paginate_request() {
   local all_content="[]"
 
   while [[ "$page" -lt "$max_pages" ]]; do
-    local payload
-    payload=$(echo "$payload_template" | jq --argjson p "$page" '. + {}')
-
     local body
-    body=$(make_api_request "POST" "${path}?page=${page}&size=100" "$payload")
+    body=$(make_api_request "POST" "${path}?page=${page}&size=100" "$payload_template")
     _read_http_code
 
     if ! check_http_status "$HTTP_CODE" "$body" "${action} (page ${page})"; then
@@ -173,33 +172,6 @@ paginate_request() {
   done
 
   echo "$all_content"
-}
-
-# --------------------------------------------------------------------------
-# build_screener_payload <symbols_json> <time_interval> <display_types_json>
-#                        [numeric_filters_json] [signal_filters_json]
-# Builds a screener search request payload using jq.
-# --------------------------------------------------------------------------
-build_screener_payload() {
-  local symbols="${1:-[]}"
-  local time_interval="${2:-DAILY}"
-  local display_types="${3:-[]}"
-  local numeric_filters="${4:-[]}"
-  local signal_filters="${5:-[]}"
-
-  jq -n \
-    --argjson symbols "$symbols" \
-    --arg interval "$time_interval" \
-    --argjson display "$display_types" \
-    --argjson numeric "$numeric_filters" \
-    --argjson signals "$signal_filters" \
-    '{
-      symbols: $symbols,
-      timeInterval: $interval,
-      displayType: $display,
-      numericFilters: $numeric,
-      signalFilters: $signals
-    }'
 }
 
 # --------------------------------------------------------------------------
@@ -256,16 +228,6 @@ cache_set() {
 # --------------------------------------------------------------------------
 cache_key_for() {
   echo "$*" | md5sum | cut -d' ' -f1
-}
-
-# --------------------------------------------------------------------------
-# cleanup_cache
-# Removes cache files older than LIB_CACHE_MAX_AGE_SECONDS.
-# --------------------------------------------------------------------------
-cleanup_cache() {
-  if [[ -d "$LIB_CACHE_DIR" ]]; then
-    find "$LIB_CACHE_DIR" -name '*.json' -mmin +$((LIB_CACHE_MAX_AGE_SECONDS / 60 + 1)) -delete 2>/dev/null
-  fi
 }
 
 # --------------------------------------------------------------------------

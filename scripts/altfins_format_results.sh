@@ -57,6 +57,15 @@ else
   input=$(cat)
 fi
 
+# Validate format
+case "$format" in
+  summary|full|csv) ;;
+  *)
+    echo "Error: invalid format '${format}'. Must be summary, full, or csv" >&2
+    exit 1
+    ;;
+esac
+
 # Validate JSON
 if ! echo "$input" | jq '.' > /dev/null 2>&1; then
   echo "Error: invalid JSON input" >&2
