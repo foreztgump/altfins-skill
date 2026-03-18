@@ -17,6 +17,17 @@ Thumbs.db
 
 # Claude
 .claude/
+CLAUDE.md
+CODE_PRINCIPLES.md
+
+# CodeRabbit
+.coderabbit.yaml
+
+# OpenSpec
+openspec/
+
+# Internal docs
+docs/superpowers/
 
 # Build artifacts
 *.zip
